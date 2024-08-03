@@ -9,7 +9,10 @@ import (
 	"go_final_project/task"
 )
 
-const taskLimit = 10
+const (
+	formatOfDate = "20060102"
+	taskLimit    = 10
+)
 
 func (s *Storage) Add(t *task.Task) (int, error) {
 	ins, err := s.db.Exec(
@@ -35,7 +38,7 @@ func (s *Storage) Add(t *task.Task) (int, error) {
 
 func (s *Storage) GetList() ([]task.Task, error) {
 	rows, err := s.db.Query(
-		`SELECT * 
+		`SELECT id, date, title, comment, repeat  
 		 FROM scheduler
 		 ORDER BY date ASC
 		 LIMIT :limit`,
@@ -71,7 +74,6 @@ func (s *Storage) GetList() ([]task.Task, error) {
 }
 
 func (s *Storage) SearchTasks(search string) ([]task.Task, error) {
-	log.Printf("looking for tasks with search parameter %s", search)
 
 	var rows *sql.Rows
 	var err error
@@ -81,7 +83,7 @@ func (s *Storage) SearchTasks(search string) ([]task.Task, error) {
 		log.Println("Search by text")
 
 		rows, err = s.db.Query(
-			`SELECT * 
+			`SELECT id, date, title, comment, repeat 
 			FROM scheduler
 			WHERE title LIKE :search OR comment LIKE :search
 			ORDER BY date LIMIT :limit`,
@@ -91,7 +93,7 @@ func (s *Storage) SearchTasks(search string) ([]task.Task, error) {
 	} else {
 		log.Println("Search by date")
 
-		target := date.Format("20060102")
+		target := date.Format(formatOfDate)
 
 		rows, err = s.db.Query(
 			`SELECT * 
@@ -122,16 +124,21 @@ func (s *Storage) SearchTasks(search string) ([]task.Task, error) {
 
 		tasks = append(tasks, t)
 	}
+
+	if rows.Err() != nil {
+		log.Println("can't find tasks by SearchTasks:", err)
+		return nil, err
+	}
+
 	log.Printf("Found %d tasks", len(tasks))
 
 	return tasks, nil
 }
 
 func (s *Storage) GetTask(id string) (task.Task, error) {
-	log.Println("Search task by ID:", id)
 
 	row := s.db.QueryRow(
-		`SELECT * 
+		`SELECT id, date, title, comment, repeat 
 		FROM scheduler 
 		WHERE id = :id`,
 		sql.Named("id", id),
@@ -153,9 +160,8 @@ func (s *Storage) GetTask(id string) (task.Task, error) {
 }
 
 func (s *Storage) Update(t task.Task) error {
-	log.Printf("Update task by ID:%s", t.ID)
 
-	_, err := s.db.Exec(
+	res, err := s.db.Exec(
 		`UPDATE scheduler 
 		SET date=:date, title= :title, comment= :comment, repeat= :repeat
 		WHERE id= :id`,
@@ -165,30 +171,43 @@ func (s *Storage) Update(t task.Task) error {
 		sql.Named("repeat", t.Repeat),
 		sql.Named("id", t.ID),
 	)
+
 	if err != nil {
 		log.Println("can't update task:", err)
 		return err
 	}
 
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		log.Println(err)
+	}
+
+	log.Printf("updated %d tasks", rowsAffected)
 	log.Println("update successful")
 
 	return nil
 }
 
 func (s *Storage) DeleteTask(id string) error {
-	log.Println("Delete task ID:", id)
 
-	_, err := s.db.Exec(
+	res, err := s.db.Exec(
 		`DELETE
 		FROM scheduler
 		WHERE id = :id`,
 		sql.Named("id", id),
 	)
+
 	if err != nil {
 		log.Println("can't delete task:", err)
 		return errors.New("task not found")
 	}
 
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		log.Println(err)
+	}
+
+	log.Printf("deleted %d tasks", rowsAffected)
 	log.Println("delete task successful")
 
 	return nil

@@ -57,7 +57,7 @@ func AddTask(storage *storage.Storage) http.HandlerFunc {
 
 		_, err = w.Write(resp)
 		if err != nil {
-			log.Fatalf("can't write response: %v", err)
+			log.Printf("can't write response: %v", err)
 		}
 		log.Printf("Task %s id:%v added successfully", t.Title, id)
 	}
@@ -75,14 +75,14 @@ func GetTasks(db *storage.Storage) http.HandlerFunc {
 		if search == "" {
 			tasks, err = db.GetList()
 			if err != nil {
-				log.Fatalf("can't get tasks: %v", err)
+				log.Printf("can't get tasks: %v", err)
 			}
 		}
 
 		if search != "" {
 			tasks, err = db.SearchTasks(search)
 			if err != nil {
-				log.Fatalf("can't find tasks: %v", err)
+				log.Printf("can't find tasks: %v", err)
 			}
 		}
 
@@ -106,7 +106,7 @@ func GetTasks(db *storage.Storage) http.HandlerFunc {
 
 		_, err = w.Write(resp)
 		if err != nil {
-			log.Fatalf("can't write response by GetTasks: %v", err)
+			log.Printf("can't write response by GetTasks: %v", err)
 		} else {
 			log.Printf("GetTasks is successful. %d tasks found", len(tasks))
 		}

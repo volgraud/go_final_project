@@ -15,6 +15,12 @@ func main() {
 		log.Fatal(err)
 	}
 
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Fatalf("Failed to close storage: %v", err)
+		}
+	}()
+
 	r := chi.NewRouter()
 
 	r.Handle("/*", handler.GetFront())
@@ -32,6 +38,4 @@ func main() {
 		log.Fatalf("Server can't start: %v", err)
 		return
 	}
-
-	log.Println("Server stopped")
 }

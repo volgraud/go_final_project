@@ -14,10 +14,10 @@ func Check(t *Task) error {
 	}
 
 	if t.Date == "" {
-		t.Date = time.Now().Format("20060102")
+		t.Date = time.Now().Format(formatOfDate)
 	}
 
-	validDate, err := time.Parse("20060102", t.Date)
+	validDate, err := time.Parse(formatOfDate, t.Date)
 	if err != nil {
 		return fmt.Errorf("date is in a format other than 20060102")
 	}
@@ -39,7 +39,7 @@ func Check(t *Task) error {
 
 	if validDate.Truncate(24 * time.Hour).Before(time.Now().Truncate(24 * time.Hour)) {
 		if t.Repeat == "" {
-			t.Date = time.Now().Format("20060102")
+			t.Date = time.Now().Format(formatOfDate)
 		}
 	}
 

@@ -57,6 +57,16 @@ func (s *Storage) initDB() error {
 	return nil
 }
 
+// функция Close закрывает соединение с базой данных
+func (s *Storage) Close() error {
+	if s.db != nil {
+		if err := s.db.Close(); err != nil {
+			return fmt.Errorf("can`t close database connection: %w", err)
+		}
+	}
+	return nil
+}
+
 func createDB(dbPath string) error {
 	_, err := os.Create(dbPath)
 	if err != nil {
